@@ -1,0 +1,91 @@
+---
+title: "Logistic Regression"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+library(tidyverse)
+library(tidymodels)
+library(ggridges)
+library(patchwork)
+```
+
+To illustrate logistic regression, we will build a spam filter from email data. Today's data represent incoming emails in David Diez's (one of the authors of OpenIntro textbooks) Gmail account for the first three months of 2012 . All personally identifiable information has been removed.
+
+```{r}
+
+email <- read_csv("https://st511-01.github.io/data/email.csv") |>
+  mutate(spam = factor(spam))
+
+glimpse(email)
+
+```
+
+The variables we'll use in this analysis are
+
+-   `spam`: 1 if the email is spam, 0 otherwise
+-   `exclaim_mess`: The number of exclamation points in the email message
+
+## Fit the model
+
+```{r}
+spam_model <- glm(spam ~ exclaim_mess, data = email, family = binomial)
+
+summary(spam_model)
+```
+
+## Evaluate your models
+
+#### Testing vs Training
+
+Let's play around with the code below. Last activity, we made our own testing and training data. Let's introduce a function that will do this for us.
+
+```{r}
+set.seed(1234)
+
+spam_split <- initial_split(email, prop = .8)
+
+spam_split
+
+spam_train <- training(spam_split)
+spam_test <- testing(spam_split)
+```
+
+**Let's go to the slides and learn how we evaluate these types of models!**
+
+## Threshold
+
+This is something that you get to justify as the researcher! And will be used for model evaluation. 
+
+```{r}
+thresh <- .05
+```
+
+We tend to look at Specificity and Sensitivity with logistic regression models:
+
+Specificity -
+
+Sensitivity -
+
+
+#### Fit the model on the Training Data + Evaluate it
+
+Comment through the code below. Next, calculate sensitivity and specificity.
+
+```{r}
+model1 <- logistic_reg() |>
+  set_engine("glm") |>
+  fit(spam ~ exclaim_mess , data = spam_train, family = binomial)
+
+predict(model1, data.frame(exclaim_mess = spam_test$exclaim_mess), type = "prob") |>
+  bind_cols(spam_test) |> 
+  select(.pred_0, .pred_1, spam) |>
+  mutate(spam_pred = if_else(.pred_1 <= thresh, 1, 0)) |>
+  group_by(spam, spam_pred) |>
+  summarize(n = n())
+```
+
+Thought Exercise: Use a `dplyr` function to take the summary table above and make it look like a 2x2 table.
