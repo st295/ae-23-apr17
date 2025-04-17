@@ -83,9 +83,14 @@ model1 <- logistic_reg() |>
 predict(model1, data.frame(exclaim_mess = spam_test$exclaim_mess), type = "prob") |>
   bind_cols(spam_test) |> 
   select(.pred_0, .pred_1, spam) |>
-  mutate(spam_pred = if_else(.pred_1 <= thresh, 1, 0)) |>
+  mutate(spam_pred = if_else(.pred_1 <= thresh, 0, 1)) |>
   group_by(spam, spam_pred) |>
   summarize(n = n())
 ```
 
 Thought Exercise: Use a `dplyr` function to take the summary table above and make it look like a 2x2 table.
+
+```{r}
+
+```
+
